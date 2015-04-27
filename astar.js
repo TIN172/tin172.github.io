@@ -2314,6 +2314,20 @@ var collections;
 })(collections || (collections = {})); // End of module 
 ///<reference path="lib/collections.ts"/>
 /**
+ * @class represent a Node which have euclidean coordinates
+ */
+var PointNode = (function () {
+    function PointNode(name, x, y) {
+        this.name = name;
+        this.x = x;
+        this.y = y;
+    }
+    PointNode.prototype.costTo = function (to) {
+        return Math.sqrt((this.x - to.x) * (this.x - to.x) + (this.y - to.y) * (this.y - to.y));
+    };
+    return PointNode;
+})();
+/**
  * @class represent a G(v,E)
  */
 var Graph = (function () {
@@ -2321,7 +2335,7 @@ var Graph = (function () {
     * Creates an instance of Graph
     * @constructor
     */
-    function Graph(nodes, edges) {
+    function Graph(nodes, edges /*A list of tuples for every node */) {
         this.nodes = nodes;
         this.edges = edges;
     }
@@ -2366,11 +2380,11 @@ var Graph = (function () {
             //find current in openset and remove that element and add to closed
             closedset.add(current);
             openset.remove(current);
-            var currentEdges = this.EdgesFor(current);
+            var currentEdges = this.edgesFor(current);
             for (var i = 0; i < currentEdges.length; ++i) {
                 if (closedset.contains(currentEdges[i][1]))
                     continue;
-                var edge_between_cost = this.cost(this.nodes[current], this.nodes[currentEdges[0][1]]);
+                var edge_between_cost = this.nodes[current].costTo(this.nodes[currentEdges[0][1]]);
                 var tentativeGScore = gScore[current] + edge_between_cost;
                 if (!openset.contains(currentEdges[i][1]) || tentativeGScore < gScore[currentEdges[i][1]]) {
                     cameFrom[currentEdges[i][1]] = current;
@@ -2391,7 +2405,7 @@ var Graph = (function () {
     * @return {number} A minimum cost for traveling between the nodes
     */
     Graph.prototype.heuristicCost = function (current, goal) {
-        return this.cost(this.nodes[current], this.nodes[goal]);
+        return this.nodes[current].costTo(this.nodes[goal]);
     };
     /**
     * Get all edges for a node
@@ -2399,23 +2413,31 @@ var Graph = (function () {
     * @param {number} node The node you want the neighbours of
     * @return {[number, number][]} A list of edges
     */
-    Graph.prototype.EdgesFor = function (node) {
+    Graph.prototype.edgesFor = function (node) {
         if (node < 0 || node >= this.nodes.length)
             throw new RangeError("Node does not exist");
         return this.edges[node];
     };
-    /**
-    * Get all edges for a node
-    *
-    * @param {number} The node you want the neighbours of
-    * @return {[number, number][]} A list of edges from the node
-    */
-    Graph.prototype.cost = function (node1, node2) {
-        return Math.sqrt((node1.x - node2.x) * (node1.x - node2.x) + (node1.y - node2.y) * (node1.y - node2.y));
-    };
     Object.defineProperty(Graph.prototype, "Size", {
+        /**
+        * Get number of nodes in the graph
+        */
         get: function () {
             return this.nodes.length;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Graph.prototype, "Nodes", {
+        get: function () {
+            return this.nodes;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Graph.prototype, "Edges", {
+        get: function () {
+            return this.edges;
         },
         enumerable: true,
         configurable: true
@@ -2426,50 +2448,50 @@ var Graph = (function () {
 var Europe;
 (function (Europe) {
     Europe.Nodes = [
-        { name: 'Albania', x: 324, y: 426 },
-        { name: 'Andorra', x: 133, y: 408 },
-        { name: 'Austria', x: 260, y: 344 },
-        { name: 'Belarus', x: 360, y: 244 },
-        { name: 'Belgium', x: 171, y: 299 },
-        { name: 'Bosnia and Herzegovina', x: 297, y: 388 },
-        { name: 'Bulgaria', x: 371, y: 397 },
-        { name: 'Croatia', x: 276, y: 370 },
-        { name: 'Czech Republic', x: 265, y: 312 },
-        { name: 'Denmark', x: 215, y: 227 },
-        { name: 'Estonia', x: 331, y: 179 },
-        { name: 'Finland', x: 307, y: 147 },
-        { name: 'France', x: 147, y: 352 },
-        { name: 'Germany', x: 220, y: 293 },
-        { name: 'Greece', x: 345, y: 442 },
-        { name: 'Hungary', x: 305, y: 346 },
-        { name: 'Ireland', x: 73, y: 249 },
-        { name: 'Island', x: 57, y: 73 },
-        { name: 'Italy', x: 225, y: 377 },
-        { name: 'Kaliningrad Oblast', x: 309, y: 238 },
-        { name: 'Kosovo', x: 329, y: 405 },
-        { name: 'Latvia', x: 328, y: 205 },
-        { name: 'Liechtenstein', x: 215, y: 351 },
-        { name: 'Lithuania', x: 327, y: 225 },
-        { name: 'Luxembourg', x: 184, y: 314 },
-        { name: 'Moldova', x: 391, y: 327 },
-        { name: 'Monaco', x: 192, y: 397 },
-        { name: 'Montenegro', x: 312, y: 405 },
-        { name: 'Netherlands', x: 179, y: 280 },
-        { name: 'Norway', x: 218, y: 170 },
-        { name: 'Poland', x: 306, y: 276 },
-        { name: 'Portugal', x: 27, y: 430 },
-        { name: 'Republic of Macedonia', x: 339, y: 415 },
-        { name: 'Romania', x: 360, y: 352 },
-        { name: 'San Marino', x: 244, y: 394 },
-        { name: 'Serbia', x: 324, y: 384 },
-        { name: 'Slovakia', x: 306, y: 323 },
-        { name: 'Slovenia', x: 265, y: 363 },
-        { name: 'Spain', x: 73, y: 430 },
-        { name: 'Sweden', x: 251, y: 196 },
-        { name: 'Switzerland', x: 200, y: 353 },
-        { name: 'Ukraine', x: 371, y: 294 },
-        { name: 'United Kingdom', x: 122, y: 267 },
-        { name: 'Vatican City', x: 242, y: 421 }
+        new PointNode('Albania', 324, 426),
+        new PointNode('Andorra', 133, 408),
+        new PointNode('Austria', 260, 344),
+        new PointNode('Belarus', 360, 244),
+        new PointNode('Belgium', 171, 299),
+        new PointNode('Bosnia and Herzegovina', 297, 388),
+        new PointNode('Bulgaria', 371, 397),
+        new PointNode('Croatia', 276, 370),
+        new PointNode('Czech Republic', 265, 312),
+        new PointNode('Denmark', 215, 227),
+        new PointNode('Estonia', 331, 179),
+        new PointNode('Finland', 307, 147),
+        new PointNode('France', 147, 352),
+        new PointNode('Germany', 220, 293),
+        new PointNode('Greece', 345, 442),
+        new PointNode('Hungary', 305, 346),
+        new PointNode('Ireland', 73, 249),
+        new PointNode('Island', 57, 73),
+        new PointNode('Italy', 225, 377),
+        new PointNode('Kaliningrad Oblast', 309, 238),
+        new PointNode('Kosovo', 329, 405),
+        new PointNode('Latvia', 328, 205),
+        new PointNode('Liechtenstein', 215, 351),
+        new PointNode('Lithuania', 327, 225),
+        new PointNode('Luxembourg', 184, 314),
+        new PointNode('Moldova', 391, 327),
+        new PointNode('Monaco', 192, 397),
+        new PointNode('Montenegro', 312, 405),
+        new PointNode('Netherlands', 179, 280),
+        new PointNode('Norway', 218, 170),
+        new PointNode('Poland', 306, 276),
+        new PointNode('Portugal', 27, 430),
+        new PointNode('Republic of Macedonia', 339, 415),
+        new PointNode('Romania', 360, 352),
+        new PointNode('San Marino', 244, 394),
+        new PointNode('Serbia', 324, 384),
+        new PointNode('Slovakia', 306, 323),
+        new PointNode('Slovenia', 265, 363),
+        new PointNode('Spain', 73, 430),
+        new PointNode('Sweden', 251, 196),
+        new PointNode('Switzerland', 200, 353),
+        new PointNode('Ukraine', 371, 294),
+        new PointNode('United Kingdom', 122, 267),
+        new PointNode('Vatican City', 242, 421)
     ];
     Europe.Edges = [
         [[0, 32], [0, 14], [0, 27], [0, 20]],
@@ -2521,10 +2543,11 @@ var Europe;
 // LCG - http://en.wikipedia.org/wiki/Linear_congruential_generator
 var Random = (function () {
     function Random(seed) {
-        this.m = (1 << 24);
-        this.a = 0x43FD43FD;
-        this.c = 0xC39EC3;
-        this.x = 0xECE66D;
+        this.seed = seed;
+        this.m = (1 << 31);
+        this.a = 1103515245;
+        this.c = 12345;
+        this.x = 0xECE66D; //xor:ed with seed
         this.setSeed(seed);
         this.x0 = seed;
     }
@@ -2532,8 +2555,8 @@ var Random = (function () {
         this.seed = (seed & (this.m - 1)) ^ this.x;
     };
     Random.prototype.next = function () {
-        this.seed = (this.seed * this.a + this.c) % this.m; //Can be optimzed with bitwise "AND" instead of modulus but loses uniformity (or something like that)
-        return (this.seed);
+        this.x0 = (this.x0 * this.a + this.c) % this.m; //Can be optimzed with bitwise "AND" instead of modulus but loses uniformity (or something like that)
+        return (this.x0);
     };
     Random.prototype.nextDouble = function () {
         return this.next() / this.m;
@@ -2541,6 +2564,13 @@ var Random = (function () {
     Random.prototype.nextRange = function (from, to) {
         return (this.next() % (to - from + 1)) + from;
     };
+    Object.defineProperty(Random.prototype, "Seed", {
+        get: function () {
+            return this.seed;
+        },
+        enumerable: true,
+        configurable: true
+    });
     return Random;
 })();
 ///<reference path="Graph.ts"/>
@@ -2587,7 +2617,7 @@ var Maze = (function () {
         var nodes = new Array(this.width * this.height_);
         for (var y = 0; y < this.height_; ++y)
             for (var x = 0; x < this.width; ++x)
-                nodes[this.xy2node(x, y)] = { name: '(' + x.toString() + ',' + y.toString() + ')', x: x, y: y };
+                nodes[this.xy2node(x, y)] = new PointNode('(' + x.toString() + ',' + y.toString() + ')', x, y);
         return nodes;
     };
     Maze.prototype.generateGraph = function (width, height, seed, balance) {
@@ -2859,7 +2889,7 @@ function init() {
         var n = maze.coord2node(x, y);
         if (n != undefined)
             startNode = n;
-        $('#maze-result').text('From ' + mazeGraph.nodes[startNode].name + ' to ' + mazeGraph.nodes[stopNode].name);
+        $('#maze-result').text('From ' + mazeGraph.Nodes[startNode].name + ' to ' + mazeGraph.Nodes[stopNode].name);
     }
     function mazeMove(e) {
         var x = e.pageX - mazeCanvas.offsetLeft;
@@ -2871,10 +2901,9 @@ function init() {
             mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
             mazeCtx.putImageData(mazeData, 0, 0);
             maze.drawPath(mazeCtx, path);
-            $('#maze-result').text('From ' + mazeGraph.nodes[startNode].name + ' to ' + mazeGraph.nodes[stopNode].name);
+            $('#maze-result').text('From ' + mazeGraph.Nodes[startNode].name + ' to ' + mazeGraph.Nodes[stopNode].name);
         }
     }
 }
 ;
 $(document).ready(init);
-//# sourceMappingURL=astar.js.map
